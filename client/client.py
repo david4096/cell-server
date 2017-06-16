@@ -63,9 +63,9 @@ def main():
     session = client.connect(user_name, passwd, db_name)
     print 'Connection complete'
     query = ""
-    #with open('maketable.sql', 'r') as myfile:
-    #    query += myfile.read().replace('\n', '')
-    query = "select sample, ENSG00000269752_1, ENSGR0000277120_4 from expressions"
+    with open('./maketable.sql', 'r') as myfile:
+        query += myfile.read().replace('\n', '')
+    #query = "select sample, ENSG00000269752_1, ENSGR0000277120_4 from expressions"
     print 'Query is : ' + query
 
     # always use True for is columnar

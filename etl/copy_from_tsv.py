@@ -4,5 +4,5 @@
 #
 # python tabletocopyto mytsv.tsv
 #
-
+import sys
 print("COPY {} FROM '{}' [WITH (delimiter = '\t', header = 'false')];".format(sys.argv[1], sys.argv[2]))

@@ -8,6 +8,7 @@
 
 import os, sys
 os.system("python " + os.path.dirname(os.path.realpath(__file__)) + "/make_feature_tsv.py {}&".format(sys.argv[1]))
+os.system("cat columns.tsv " + os.path.dirname(os.path.realpath(__file__)) + "/create_feature_table.py {}&".format(sys.argv[1]))
 
 for k in range(0, 31):
      os.system("python " + os.path.dirname(os.path.realpath(__file__)) + "/h5_to_tsv.py {} {}&".format(sys.argv[1], k))
