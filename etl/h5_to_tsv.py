@@ -49,5 +49,5 @@ for i in range (k * len(barcodes) / 31, to):
         index = indices_range[j]
         value = data_range[j]
         values[index] = value
-    fout.write(barcode+'\t'+string.join(map(lambda x: str(x), values),'\t')+'\n')
+    fout.write('{}\t'.format(barcode.replace('-',''))+string.join(map(lambda x: str(x), values),'\t')+'\n')
 fout.close()

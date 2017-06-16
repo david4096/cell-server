@@ -31,8 +31,7 @@ for i, feature in enumerate(features):
     feature_string += feature_sql_string(feature)
     if i != len(features) - 1:
         feature_string += ",\n    "
-create_string = """
-CREATE TABLE IF NOT EXISTS expressions (
+create_string = """CREATE TABLE IF NOT EXISTS expressions (
     sample TEXT ENCODING DICT,
-    {})""".format(feature_string)
+    {});""".format(feature_string)
 print(create_string)

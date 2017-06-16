@@ -5,4 +5,5 @@
 # python tabletocopyto mytsv.tsv
 #
 import sys
+# TODO needs to point to absolute path
 print("COPY {} FROM '{}' [WITH (delimiter = '\t', header = 'false')];".format(sys.argv[1], sys.argv[2]))
