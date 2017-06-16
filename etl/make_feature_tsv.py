@@ -14,7 +14,7 @@ import string, sys
 import h5py
 import numpy as np
 
-hF = h5py.File(argv[1])
+hF = h5py.File(sys.argv[1])
 
 group = "mm10"
 indptr = hF[group +"/indptr"]
