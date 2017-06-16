@@ -29,6 +29,6 @@ colN = shape[1]
 counter_indptr_size = rowN
 
 fout = open("features.tsv",'w')
-
+fout.write("index\tfeature\tfeature_name\n")
 for i in range (0, len(genes)):
-    fout.write("{} {} {}".format(i, genes[i], gene_names[i]))
+    fout.write("{}\t{}\t{}\n".format(i, genes[i], gene_names[i]))
