@@ -6,8 +6,8 @@
 #
 # Where 0 is the slice that will be converted into a CSV.
 
-import os
+import os, sys
 os.system("python " + os.path.dirname(os.path.realpath(__file__)) + "/make_feature_tsv.py {}&".format(sys.argv[1]))
 
 for k in range(0, 31):
-     os.system("python " + os.path.dirname(os.path.realpath(__file__)) + "/maketsv.py {} {}&".format(sys.argv[1], k))
+     os.system("python " + os.path.dirname(os.path.realpath(__file__)) + "/h5_to_tsv.py {} {}&".format(sys.argv[1], k))
