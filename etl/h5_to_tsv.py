@@ -30,7 +30,7 @@ rowN = shape[0]
 colN = shape[1]
 counter_indptr_size = rowN
 
-k = int(sys.argv[1])
+k = int(sys.argv[2])
 fout = open("out{}.tsv".format(k),'w')
 
 for i in range (k * len(barcodes) / 31, (k + 1) * len(barcodes) / 31):
