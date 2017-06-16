@@ -32,7 +32,7 @@ counter_indptr_size = rowN
 
 k = int(sys.argv[2])
 fout0 = open("columns.tsv", "w")
-line = "sample {}".format("t".join(genes))
+line = "sample {}".format("\t".join(genes))
 fout0.write(line)
 fout0.close()
 
