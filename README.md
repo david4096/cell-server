@@ -1,9 +1,25 @@
-# <img src="https://github.com/david4096/cell-server/blob/master/static/sammy_small.png" align="left"/> cell-server 
+# <img src="https://github.com/david4096/cell-server/blob/master/static/sammy_small.png" align="left"/> cell-server
 Database for functional genomics
 
+## Installation
+
+A cpu-only dockerfile allows one to build MapD from source.
+
+## Configuration
 
 
-## Data Model
+
+## Client
+
+
+## Importing data
+
+
+## Exporting data
+
+
+
+### Data Model
 
 The cell server aims to organize functional genomics data for rapid genomic
 analysis by focusing on the problems of handling RNA expression vectors. It
@@ -31,9 +47,9 @@ In this way, the `expressions` table provides the primary interface for acting
 on data in the cell-server. It is expected that phenotypic data, and metadata
 regarding features will be gathered through other databases and services.
 
-### Tables
+#### Tables
 
-### features
+##### features
 
 To facilitate rudimentary analysis, each sample is expected to use the latest
 reference gencode genes (FIXME is another approach plausible?). This table is
@@ -52,7 +68,7 @@ select * from features limit 10;
 
 ```
 
-### expressions
+##### expressions
 
 After normalizing to the expected feature-space, expression vectors are added
 to this table row wise. Each row contains a sample identifier, and a column
