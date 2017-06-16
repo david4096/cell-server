@@ -31,6 +31,10 @@ colN = shape[1]
 counter_indptr_size = rowN
 
 k = int(sys.argv[2])
+fout0 = open("columns.tsv", "w")
+line = "sample {}".format("t".join(genes))
+fout0.close()
+
 fout = open("out{}.tsv".format(k),'w')
 
 for i in range (k * len(barcodes) / 31, (k + 1) * len(barcodes) / 31):
@@ -44,3 +48,4 @@ for i in range (k * len(barcodes) / 31, (k + 1) * len(barcodes) / 31):
         value = data_range[j]
         values[index] = value
     fout.write(barcode+'\t'+string.join(map(lambda x: str(x), values),'\t')+'\n')
+fout.close()
