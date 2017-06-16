@@ -28,7 +28,6 @@ rowN = shape[0]
 colN = shape[1]
 counter_indptr_size = rowN
 
-k = int(sys.argv[2])
 fout = open("features.tsv".format(k),'w')
 
 for i in range (0, len(genes)):
