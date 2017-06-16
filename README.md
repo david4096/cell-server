@@ -1,4 +1,4 @@
-# cell-server <img src="https://github.com/david4096/cell-server/blob/master/static/sammy_small.png" />
+# <img src="https://github.com/david4096/cell-server/blob/master/static/sammy_small.png" align="left"/> cell-server 
 Database for functional genomics
 
 
