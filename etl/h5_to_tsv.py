@@ -31,14 +31,15 @@ colN = shape[1]
 counter_indptr_size = rowN
 
 k = int(sys.argv[2])
-fout0 = open("columns.tsv", "w")
-line = "sample {}".format("\t".join(genes))
-fout0.write(line)
-fout0.close()
 
 fout = open("out{}.tsv".format(k),'w')
 
-for i in range (k * len(barcodes) / 31, (k + 1) * len(barcodes) / 31):
+if k == 31:
+    to = len(barcodes)
+else:
+    to = (k + 1) * len(barcodes) / 31
+
+for i in range (k * len(barcodes) / 31, to):
     barcode = barcodes[i]
     indices_range = indices[indptr[i]:indptr[i+1]]
     data_range = data[indptr[i]:indptr[i+1]]
