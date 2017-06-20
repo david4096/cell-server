@@ -137,13 +137,29 @@ class Client(object):
 
             return pd.DataFrame(matrix, index=rows, columns=columns)
 
+    def query_df(self, query):
+        start = timer()
+        results = self._get_results(query)
+        end = timer()
+        print(end - start)
+        return self._results_to_dataframe(results)
 
     def query(self, query):
         start = timer()
         results = self._get_results(query)
         end = timer()
         print(end - start)
-        return self._results_to_dataframe(results)
+        return results
+
+    def query_from_file(self, path):
+        start = timer()
+        query = ""
+        with open(path) as f:
+            query = "".join([line.rstrip('\n') for line in f])
+        results = self._get_results(query)
+        end = timer()
+        print(end - start)
+        return results
 
     def disconnect(self):
         for session in self._sessions:
