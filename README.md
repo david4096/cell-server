@@ -3,21 +3,54 @@ Database for functional genomics
 
 ## Installation
 
-A cpu-only dockerfile allows one to build MapD from source.
+Phoenix Hbase with spark connector.
 
-## Configuration
+## Connecting to the server
 
+There are two interfaces available for executing SQL queries. A JDBC interface allows one to connect legacy systems to the server easily, and Spark dataframes provide an interface for performing analysis at scale.
 
+### JDBC Client
 
-## Client
+A JDBC SQL client is provided that allows one to easily connect existing systems to the Cell Server. To connect to the server use the appropriate JDBC driver for your version.
 
+#### Using JayDeBeApi from python
 
-## Importing data
+Download the driver.
 
+Use fetchall when gathering from a cursor to improve performance.
 
-## Exporting data
+Note, if performance is a concern consider using the spark interface.
 
+```
+cursor = conn.cursor()
+cursor.arraysize = 10000
+cursor.execute("select * from table1")
 
+rows = cursor.fetchall()
+
+# storing data in a pandas DataFrame
+df = pd.DataFrame(data=rows, columns = ["C1", "C2", "C3"])
+
+cursor.close()
+```
+
+https://stackoverflow.com/questions/26916459/python-sql-query-performance
+
+https://github.com/baztian/jaydebeapi
+
+### Spark Client
+
+Data can be accessed using the Spark dataframes interface. This allows map-reduce jobs to push down to Phoenix SQL to create a comfortable interface for performing analysis at scale.
+
+```
+df = sqlContext.read \
+  .format("org.apache.phoenix.spark") \
+  .option("table", "TABLE1") \
+  .option("zkUrl", "localhost:2181") \
+  .load()
+```
+
+https://phoenix.apache.org/phoenix_spark.html
 
 ### Data Model
 
@@ -70,10 +103,7 @@ select * from features limit 10;
 
 ##### expressions
 
-After normalizing to the expected feature-space, expression vectors are added
-to this table row wise. Each row contains a sample identifier, and a column
-for each feature that contains a precision decimal value representing that
-sample's expression.
+Expression vectors are added to this table row wise. Each row contains a sample identifier, and a column for each feature that contains a precision decimal value representing that sample's expression.
 
 ```
 
@@ -84,4 +114,4 @@ sample1|0.0
 ```
 
 * may need to change to include an array or blob column that contains the whole
-vector to ease recreating the whole feature vector
+vector to ease recreating the whole feature vector (not if we use a sparse representation)
