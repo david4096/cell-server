@@ -5,7 +5,7 @@
 
 import celldb
 
-URL = "http://localhost:8765"
+URL = "http://127.0.0.1:8765"
 
 # We will try to sneak a regression test into our integration test by placing
 # lower bounds on the acceptable response time from phoenix. By constraining

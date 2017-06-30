@@ -10,6 +10,8 @@ services:
 before_install:
   - docker pull david4096/docker-phoenix
   - docker run -itd -p 8765:8765 david4096/docker-phoenix
+  - sleep 45
+  - docker ps -a
 
 install:
   - pip install -r dev-requirements.txt
@@ -17,4 +19,5 @@ install:
 
 script:
   - flake8 celldb tests
+  - docker ps -a
   - nosetests
