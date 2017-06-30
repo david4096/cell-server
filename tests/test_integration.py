@@ -3,15 +3,21 @@
 # These tests modify the database and so caution should be made when attempting
 # to parallelize.
 
+import celldb
+
 URL = "http://localhost:8765"
 
-import celldb
+# We will try to sneak a regression test into our integration test by placing
+# lower bounds on the acceptable response time from phoenix. By constraining
+# these timeouts we can put bounds on the performance of working with data
+# of various shapes.
+
 
 def _drop_tables(cursor):
     try:
         cursor.execute("DROP TABLE Expressions")
         cursor.execute("DROP TABLE Features")
-    except Exception as e:
+    except:
         print("Tables already existed, nothing to do")
     return cursor
 
@@ -29,7 +35,6 @@ class TestIntegration:
         cursor = celldb.connect(URL).cursor()
         _drop_tables(cursor)
 
-
     def test_connect(self):
         """
         Attempts a connection to the database.
@@ -45,4 +50,3 @@ class TestIntegration:
         celldb.upsert_sample(cursor, sampleId, [featureId], [value])
         assert celldb.list_samples(cursor) == [sampleId]
         assert celldb.list_features(cursor) == [featureId]
-        

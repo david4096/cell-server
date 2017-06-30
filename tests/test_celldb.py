@@ -1,8 +1,7 @@
-import unittest
-import mock
 import phoenixdb
 
 import celldb.celldb as celldb
+
 
 def test_connect():
     """
@@ -23,9 +22,8 @@ def test_connect():
         c_exception = e
     assert p_exception
     assert c_exception
-    print c_exception
-    print p_exception
     assert str(p_exception) == str(c_exception)
+
 
 def test_feature_dtype_list():
     """
@@ -37,9 +35,10 @@ def test_feature_dtype_list():
     expected = "A DECIMAL(10, 6), B DECIMAL(10, 6), C DECIMAL(10, 6)"
     assert celldb._feature_dtype_list(featureIds) == expected
 
+
 def test_safe_fn():
     """
     Shows how the safe_fn guards against all exceptions.
     :return:
     """
-    assert celldb._safe_fn(pow, 2, "a") == None
+    assert celldb._safe_fn(pow, 2, "a") is None

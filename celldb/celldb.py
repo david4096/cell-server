@@ -3,16 +3,13 @@
 #
 import phoenixdb
 
-#debug
-
-DEBUG = True
-
 # All expressions are expressed as a precision decimal. This allows us to
 # capture both integral counts and float values.
 #
 # It is possible to allow for dynamic typing, however, this induces complexity
 # for querying and indexing.
 DTYPE = "DECIMAL(10, 6)"
+
 
 def _create_expressions_table(cursor):
     """
@@ -22,6 +19,7 @@ def _create_expressions_table(cursor):
     """
     cursor.execute("CREATE TABLE Expressions (sampleId VARCHAR PRIMARY KEY)")
     return cursor
+
 
 def _create_features_table(cursor):
     """
@@ -35,6 +33,7 @@ def _create_features_table(cursor):
         "(featureId VARCHAR PRIMARY KEY, featureName VARCHAR)")
     return cursor
 
+
 def _upsert_feature(cursor, featureId):
     """
     Attempts to upsert a row in Features table.
@@ -43,6 +42,7 @@ def _upsert_feature(cursor, featureId):
     """
     cursor.execute(
         "UPSERT INTO Features(featureId) VALUES ('{}')".format(featureId))
+
 
 def _feature_dtype_list(featureIds):
     """
@@ -53,6 +53,7 @@ def _feature_dtype_list(featureIds):
     """
     return ", ".join(map(
         lambda x: "{} {}".format(x, DTYPE), featureIds))
+
 
 def _upsert_sample(cursor, sampleId, featureIds, values):
     """
@@ -71,6 +72,7 @@ def _upsert_sample(cursor, sampleId, featureIds, values):
             ", ".join(map(lambda x: str(x), values)))
     cursor.execute(sql)
 
+
 def _upsert_features(cursor, featureIds):
     """
     Attempts to upsert a featureId row for every featureId.
@@ -83,6 +85,7 @@ def _upsert_features(cursor, featureIds):
     # we simply upsert the key for every feature.
     for featureId in featureIds:
         _upsert_feature(cursor, featureId)
+
 
 def upsert_sample(cursor, sampleId, featureIds, values):
     """
@@ -101,6 +104,7 @@ def upsert_sample(cursor, sampleId, featureIds, values):
     _upsert_features(cursor, featureIds)
     return cursor
 
+
 def connect(url, **kwargs):
     """
     A loose layer over phoenixdb's connect method.
@@ -108,6 +112,7 @@ def connect(url, **kwargs):
     :return:
     """
     return phoenixdb.connect(url, autocommit=True, **kwargs)
+
 
 def list_features(cursor, limit=200000, offset=0):
     """
@@ -123,6 +128,7 @@ def list_features(cursor, limit=200000, offset=0):
                    "LIMIT {} OFFSET {}".format(limit, offset))
     return _fetchall_keys(cursor)
 
+
 def list_samples(cursor, limit=1000000, offset=0):
     """
     A convenience function for accessing the list of sampleIds from the
@@ -135,6 +141,7 @@ def list_samples(cursor, limit=1000000, offset=0):
     cursor.execute("SELECT sampleId from Expressions "
                    "LIMIT {} OFFSET {}".format(limit, offset))
     return _fetchall_keys(cursor)
+
 
 def matrix(cursor, sampleIds, featureIds):
     """
@@ -156,6 +163,7 @@ def matrix(cursor, sampleIds, featureIds):
     cursor.execute(sql)
     return cursor.fetchall()
 
+
 def _fetchall_keys(cursor):
     """
     A private convenience function that gets the first item from every row
@@ -165,6 +173,7 @@ def _fetchall_keys(cursor):
     """
     return [x[0] for x in cursor.fetchall()]
 
+
 def _safe_fn(fn, *args):
     """
     A catch all higher order function for general exception handling.
@@ -172,11 +181,13 @@ def _safe_fn(fn, *args):
     :param args:
     :return:
     """
+    ret = None
     try:
-        return fn(*args)
+        ret = fn(*args)
     except Exception as e:
         print(e)
-    return None
+    return ret
+
 
 def initialize(connection):
     """
