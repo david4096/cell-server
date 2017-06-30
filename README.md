@@ -1,5 +1,5 @@
-# <img src="https://github.com/david4096/cell-server/blob/master/static/sammy_small.png" align="left"/> cell-server
-Database for functional genomics
+# <img src="https://github.com/david4096/celldb/blob/master/static/sammy_small.png" align="left"/> celldb
+Database for functional genomics.
 
 ## Installation
 
@@ -56,7 +56,7 @@ select gene1, gene2, gene3 from expressions where gene1 > 0.5
 ```
 
 In this way, the `expressions` table provides the primary interface for acting
-on data in the cell-server. It is expected that phenotypic data, and metadata
+on data in the celldb. It is expected that phenotypic data, and metadata
 regarding features will be gathered through other databases and services.
 
 #### Tables
