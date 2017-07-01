@@ -1,5 +1,6 @@
-# <img src="https://github.com/david4096/celldb/blob/master/static/sammy_small.png" align="left"/> celldb
+# <img src="https://github.com/david4096/celldb/blob/master/static/sammy_small.png" align="left"/> celldb <img src="https://img.shields.io/travis/david4096/celldb.svg" />
 Database for functional genomics.
+
 
 ```
 docker run -itd -p 8765:8765 david4096/docker-phoenix
