@@ -1,23 +1,27 @@
 sudo: required
-
 language: python
 python:
-  - "2.7"
-
+- '2.7'
 services:
-  - docker
-
+- docker
 before_install:
-  - docker pull david4096/docker-phoenix
-  - docker run -itd -p 8765:8765 david4096/docker-phoenix
-  - sleep 45
-  - docker ps -a
-
+- docker pull david4096/docker-phoenix
+- docker run -itd -p 8765:8765 david4096/docker-phoenix
+- sleep 45
+- docker ps -a
 install:
-  - pip install -r dev-requirements.txt
-  - pip install -r requirements.txt
-
+- pip install -r dev-requirements.txt
+- pip install -r requirements.txt
 script:
-  - flake8 celldb tests
-  - docker ps -a
-  - nosetests
+- flake8 celldb tests
+- docker ps -a
+- nosetests
+deploy:
+  provider: pypi
+  user: david4096
+  password:
+    secure: knR3ctncIkOSaRsTgn4Jv8Dohz7i2C3G6m0+bFwYcoeVaZP06JIb6cldfFgo0Y2jXQyym2K4jaQLT/3GM6xC7qM4/ccYC6TqCSqe4ECf3ySfwvJAqJf1BOAlpvtzD+p6AHz1dJZmGXbTWbq+sGudmv8nDa6vXRND1BhZ/amPf6FNmdNW2dacpnuJLnreQ/r9T/Um6xfWv3L2TDwPadxpiTyECoPmEY0s0F3SHiCTUPWM6pnq6JKZnKUGAZiugUGb9OBcxaPAtYNGRHZFYbTw2dzCcmO7vPMhS6UcgE4aRbY8dXEW5s9ct4uwVgPUbMszBP3p195GZ/Z+IguHAFkkIrpjuWjeVvD9CKvdNibp4bLctlpOnH40OB1qXAmjvQM/oo0bLgVMEB+sxeK6nVNCmh2dioGT2fkwtJXEofYUGfHU6rm9wKSLP7S2LfIXEbCiMU4DfpPVuKoafhRTLX4x4KXkxJrfCSyBed+xJPi1uYWC9RkrdaoTO1YxRYyI+YHTTamjIZfNHWjN0mIqofgC4P75jksC/Smd8Q3hoA/NX6DHoTdtBeCpvcUkL+x3MGO9li9iHVlHWiAzu1udcO/bluwoFTwte2FuNNOi3T66GJdPx6yHTMpTu0CzzwjKobjrwnazOX4aiigcl3D+5EsG8KYq7/Chn6ZnjWHLKJMgoOc=
+  skip_upload_docs: true
+  on:
+    repo: david4096/celldb
+tags: true
