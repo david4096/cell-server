@@ -154,14 +154,26 @@ def matrix(cursor, sampleIds, featureIds):
                         expression data.
     :return:
     """
+    cursor.execute(matrix_sql(sampleIds, featureIds))
+    return cursor.fetchall()
+
+
+def matrix_sql(sampleIds, featureIds):
+    """
+    A convenience function for generating the request for a sample-feature
+    matrix. It includes the sampleId, which simplifies labeling into a
+    dataframe. Also used internally by the `matrix` function.
+    :param sampleIds:
+    :param featureIds:
+    :return:
+    """
     feature_dtype_list = _feature_dtype_list(featureIds)
     feature_list = ", ".join(featureIds)
     sample_list = ", ".join(map(lambda x: "'{}'".format(x), sampleIds))
     sql = "SELECT sampleId, {} from Expressions({}) " \
           "WHERE sampleId IN({})".format(
             feature_list, feature_dtype_list, sample_list)
-    cursor.execute(sql)
-    return cursor.fetchall()
+    return sql
 
 
 def _fetchall_keys(cursor):

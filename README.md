@@ -14,9 +14,7 @@ data at scale. However, not everyone has a Hadoop cluster lying around and so
 you can use the [docker-phoenix](https://https://github.com/david4096/docker-phoenix) image
 for your experimentation.
 
-*TODO* write instructions on setting up basic hbase cluster
-
-`docker run `
+`docker run -it -p 8765:8765 david4096/docker-phoenix`
 
 ## Connecting to the server
 
@@ -24,9 +22,33 @@ There are two interfaces available for executing SQL queries. A JDBC interface
 allows one to connect legacy systems to the server easily, and Spark dataframes
 provide an interface for performing analysis at scale.
 
-### Protocol Buffers Interface
+### Python client
 
+The celldb python client communicates with Phoenix over protocol buffers using
+the `phoenixdb` python module. It implements a superset of the DB 2.0 API and
+can be used to execute arbitrary SQL easily.
 
+```
+import celldb
+connection = celldb.connect("http://localhost:8765")
+cursor = celldb.initialize(connection)
+cursor.execute("SELECT * from Expression")
+cursor.fetchall()
+```
+
+The client also contains a number of convenience functions. Check out the
+[notebooks](https://github.com/david4096/celldb/blob/master/notebooks/python-getting-started.ipynb) for examples of how it can be used.
+
+```
+sampleIds = celldb.list_samples(cursor)
+featureIds = celldb.list_features(cursor)
+matrix = celldb.matrix(cursor, sampleIds, featureIds)
+# ('sampleId', Decimal(10.2), Decimal(1.5))
+import pandas as pd
+sql = celldb.matrix_sql(samples, features)
+df = pd.read_sql(sql, connection, index_col="SAMPLEID")
+df.describe()
+```
 
 ### Spark Client
 
