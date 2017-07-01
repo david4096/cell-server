@@ -4,7 +4,7 @@ Database for functional genomics.
 
 ```
 docker run -itd -p 8765:8765 david4096/docker-phoenix
-pip install https://github.com/david4096/celldb.git@master
+pip install celldb
 jupyter notebook notebooks/getting-started.ipynb
 ```
 
@@ -12,7 +12,7 @@ jupyter notebook notebooks/getting-started.ipynb
 
 celldb uses the Phoenix adapter over HBase to enable SQL queries over sparse
 data at scale. However, not everyone has a Hadoop cluster lying around and so
-you can use the [docker-phoenix](https://https://github.com/david4096/docker-phoenix) image
+you can use the [docker-phoenix](https://github.com/david4096/docker-phoenix) image
 for your experimentation.
 
 `docker run -it -p 8765:8765 david4096/docker-phoenix`
