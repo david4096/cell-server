@@ -44,7 +44,7 @@ setup(
     packages=["celldb"],
     zip_safe=False,
     url="https://github.com/david4096/celldb",
-    use_scm_version={"write_to": "celldb/_version.py"},
+    version=1.0,
     entry_points={
         'console_scripts': [] # TODO add one for SQL line
     },
@@ -64,5 +64,5 @@ setup(
     ],
     keywords=['genomics'],
     # Use setuptools_scm to set the version number automatically from Git
-    setup_requires=['setuptools_scm'],
+    # setup_requires=['setuptools_scm'],
 )
