@@ -1,9 +1,22 @@
 # <img src="https://github.com/david4096/celldb/blob/master/static/sammy_small.png" align="left"/> celldb
 Database for functional genomics.
 
+```
+docker run -itd -p 8765:8765 david4096/docker-phoenix
+pip install https://github.com/david4096/celldb.git@master
+jupyter notebook notebooks/getting-started.ipynb
+```
+
 ## Installation
 
-Phoenix Hbase with spark connector.
+celldb uses the Phoenix adapter over HBase to enable SQL queries over sparse
+data at scale. However, not everyone has a Hadoop cluster lying around and so
+you can use the [docker-phoenix](https://https://github.com/david4096/docker-phoenix) image
+for your experimentation.
+
+*TODO* write instructions on setting up basic hbase cluster
+
+`docker run `
 
 ## Connecting to the server
 
@@ -31,7 +44,7 @@ df = sqlContext.read \
 
 https://phoenix.apache.org/phoenix_spark.html
 
-### Data Model
+## Data Model
 
 The cell server aims to organize functional genomics data for rapid genomic
 analysis by focusing on the problems of handling RNA expression vectors. It
@@ -97,3 +110,7 @@ sample1|0.0
 * may need to change to include an array or blob column that contains the whole
 vector to ease recreating the whole feature vector (not if we use a sparse
 representation)
+
+## Development
+
+If you'd like to contribute to celldb development there is a lot to be done!
