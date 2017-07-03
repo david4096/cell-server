@@ -5,17 +5,24 @@ python:
 services:
 - docker
 before_install:
+# get the docker image to run phoenix
 - docker pull david4096/docker-phoenix
+# run the image with port forwarding
 - docker run -itd -p 8765:8765 david4096/docker-phoenix
+# sleep while hadoop services start
 - sleep 45
+# make sure our container started successfully
 - docker ps -a
+
 install:
 - pip install -r dev-requirements.txt
 - pip install -r requirements.txt
+
 script:
 - flake8 celldb tests
 - docker ps -a
 - nosetests
+
 deploy:
   provider: pypi
   user: david4096
