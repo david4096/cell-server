@@ -87,7 +87,7 @@ def _upsert_features(cursor, featureIds):
         _upsert_feature(cursor, featureId)
 
 
-def upsert_sample(cursor, sampleId, featureIds, values):
+def upsert_sample(cursor, sampleId, featureIds, values, upsert_features=True):
     """
     Attempts to add a sample using dynamic columns. The list of features do
     not need to be present in the database.
@@ -101,7 +101,24 @@ def upsert_sample(cursor, sampleId, featureIds, values):
     :return cursor:
     """
     _upsert_sample(cursor, sampleId, featureIds, values)
+    if upsert_features:
+        _upsert_features(cursor, featureIds)
+    return cursor
+
+
+def upsert_samples(cursor, sampleIds, featureIds, vectors):
+    """
+    Attempts to upsert a list of expression vectors ordered by the list of
+    sampleIds and featureIds provided.
+    :param cursor:
+    :param sampleIds:
+    :param featureIds:
+    :param vectors:
+    :return:
+    """
     _upsert_features(cursor, featureIds)
+    for k, sampleId in enumerate(sampleIds):
+        _upsert_sample(cursor, sampleId, featureIds, vectors[k])
     return cursor
 
 

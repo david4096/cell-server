@@ -5,7 +5,8 @@ from celldb import (
     list_features,
     list_samples,
     matrix,
-    matrix_sql)
+    matrix_sql,
+    upsert_samples)
 
 assert connect
 assert upsert_sample
@@ -14,3 +15,4 @@ assert list_features
 assert list_samples
 assert matrix
 assert matrix_sql
+assert upsert_samples
