@@ -3,7 +3,7 @@
 # These tests modify the database and so caution should be made when attempting
 # to parallelize.
 
-import celldb
+from celldb.client import client as celldb
 
 import random
 import time

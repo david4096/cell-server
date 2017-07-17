@@ -1,6 +1,6 @@
 import phoenixdb
 
-import celldb.celldb as celldb
+from celldb.client import client as celldb
 
 
 def test_connect():

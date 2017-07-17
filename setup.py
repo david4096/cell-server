@@ -41,7 +41,8 @@ except EnvironmentError:
 setup(
     name="celldb",
     description="Functional genomics database python client.",
-    packages=["celldb"],
+    packages=["celldb.client"],
+    namespace_packages=["celldb"],
     zip_safe=False,
     url="https://github.com/david4096/celldb",
     version=1.0,
