@@ -34,14 +34,32 @@ def _create_features_table(cursor):
     return cursor
 
 
-def _upsert_feature(cursor, featureId):
+def upsert_feature(cursor, featureId, featureName=None):
+    """
+    Add a feature to the database with an optional featureName.
+    :param cursor:
+    :param featureId:
+    :param featureName:
+    :return:
+    """
+    _alter_expressions_table(cursor, [featureId])
+    _upsert_feature(cursor, featureId, featureName)
+
+
+def _upsert_feature(cursor, featureId, featureName=None):
     """
     Attempts to upsert a row in Features table.
     :param cursor:
     :return:
     """
-    cursor.execute(
-        "UPSERT INTO Features(featureId) VALUES ('{}')".format(featureId))
+    if featureName:
+        sql = "UPSERT INTO Features(featureId, " \
+              "featureName) VALUES ('{}', '{}')".format(
+                featureId, featureName)
+    else:
+        sql = "UPSERT INTO Features(featureId) VALUES ('{}')".format(
+                featureId)
+    cursor.execute(sql)
 
 
 def _feature_dtype_list(featureIds):
@@ -65,15 +83,25 @@ def _upsert_sample(cursor, sampleId, featureIds, values):
     :param values:
     :return:
     """
-    feature_dtype_list = _feature_dtype_list(featureIds)
     sql = "UPSERT INTO Expressions(sampleId, {}) VALUES ('{}', {})".format(
-            feature_dtype_list,
+            ", ".join(featureIds),
             sampleId,
             ", ".join(map(lambda x: str(x), values)))
     cursor.execute(sql)
 
+def _alter_expressions_table(cursor, featureIds):
+    """
+    Takes a list of featureIds and modifies the expressions table to support
+    it.
+    :param cursor:
+    :param featureIds:
+    :return:
+    """
+    feature_list = _feature_dtype_list(featureIds)
+    sql = "ALTER TABLE Expressions ADD {}".format(feature_list)
+    cursor.execute(sql)
 
-def _upsert_features(cursor, featureIds):
+def _upsert_features(cursor, featureIds, featureNames=None):
     """
     Attempts to upsert a featureId row for every featureId.
     :param cursor:
@@ -83,11 +111,29 @@ def _upsert_features(cursor, featureIds):
     # Consider creating the transposed table here as well in Features
     # to easily find the samples associated with a given key. In this case
     # we simply upsert the key for every feature.
-    for featureId in featureIds:
-        _upsert_feature(cursor, featureId)
+    if featureNames and len(featureIds) == len(featureNames):
+        for featureId, featureName in zip(featureIds, featureNames):
+            _upsert_feature(cursor, featureId, featureName)
+    elif featureNames:
+        raise Exception("list of featureIds and featureNames did not match")
+    else:
+        for featureId in featureIds:
+            _upsert_feature(cursor, featureId)
 
+def upsert_features(cursor, featureIds, featureNames=None):
+    """
+    Upserts a list of featureIds and optional featureNames into the Features
+    table and modifies the Expressions table to expect samples with these
+    features.
+    :param cursor:
+    :param featureIds:
+    :param featureNames:
+    :return:
+    """
+    _alter_expressions_table(cursor, featureIds)
+    _upsert_features(cursor, featureIds, featureNames)
 
-def upsert_sample(cursor, sampleId, featureIds, values, upsert_features=True):
+def upsert_sample(cursor, sampleId, featureIds, values, add_features=True):
     """
     Attempts to add a sample using dynamic columns. The list of features do
     not need to be present in the database.
@@ -98,11 +144,15 @@ def upsert_sample(cursor, sampleId, featureIds, values, upsert_features=True):
                         argument.
     :param values:      A list of numeric values retaining the order of the
                         `featureIds` argument.
+    :param add_features:
+                        Instructs the function about whether or not the sample
+                        is expected to present new features to the database.
     :return cursor:
     """
-    _upsert_sample(cursor, sampleId, featureIds, values)
-    if upsert_features:
+    if add_features:
+        _alter_expressions_table(cursor, featureIds)
         _upsert_features(cursor, featureIds)
+    _upsert_sample(cursor, sampleId, featureIds, values)
     return cursor
 
 
@@ -116,6 +166,7 @@ def upsert_samples(cursor, sampleIds, featureIds, vectors):
     :param vectors:
     :return:
     """
+    _alter_expressions_table(cursor, featureIds)
     _upsert_features(cursor, featureIds)
     for k, sampleId in enumerate(sampleIds):
         _upsert_sample(cursor, sampleId, featureIds, vectors[k])
@@ -184,12 +235,11 @@ def matrix_sql(sampleIds, featureIds):
     :param featureIds:
     :return:
     """
-    feature_dtype_list = _feature_dtype_list(featureIds)
     feature_list = ", ".join(featureIds)
     sample_list = ", ".join(map(lambda x: "'{}'".format(x), sampleIds))
-    sql = "SELECT sampleId, {} from Expressions({}) " \
+    sql = "SELECT sampleId, {} from Expressions " \
           "WHERE sampleId IN({})".format(
-            feature_list, feature_dtype_list, sample_list)
+            feature_list, sample_list)
     return sql
 
 
