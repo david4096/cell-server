@@ -6,7 +6,9 @@ from client import (
     list_samples,
     matrix,
     matrix_sql,
-    upsert_samples)
+    upsert_samples,
+    upsert_features,
+    upsert_feature)
 
 assert connect
 assert upsert_sample
