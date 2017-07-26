@@ -45,7 +45,7 @@ setup(
     namespace_packages=["celldb"],
     zip_safe=False,
     url="https://github.com/david4096/celldb",
-    version=1.0,
+    version=2.0,
     entry_points={
         'console_scripts': [] # TODO add one for SQL line
     },
