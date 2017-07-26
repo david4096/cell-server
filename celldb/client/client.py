@@ -89,10 +89,7 @@ def upsert_samples(cursor, sampleIds, featureIds, vectors):
     :return:
     """
     _upsert_features(cursor, featureIds)
-    print(sampleIds)
-    print(vectors[0])
     for k, sampleId in enumerate(sampleIds):
-        print(k)
         _upsert_sample(cursor, sampleId, featureIds, vectors[k])
     return cursor
 
