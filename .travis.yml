@@ -6,11 +6,9 @@ services:
 - docker
 before_install:
 # get the docker image to run phoenix
-- docker pull david4096/docker-phoenix
+- docker pull redis
 # run the image with port forwarding
-- docker run -itd -p 8765:8765 david4096/docker-phoenix
-# sleep while hadoop services start
-- sleep 45
+- docker run -itd -p 6379:6379 redis
 # make sure our container started successfully
 - docker ps -a
 

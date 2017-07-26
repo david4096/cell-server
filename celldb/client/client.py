@@ -1,79 +1,47 @@
 #!/usr/bin/env python
 # celldb
 #
-import phoenixdb
-
-# All expressions are expressed as a precision decimal. This allows us to
-# capture both integral counts and float values.
-#
-# It is possible to allow for dynamic typing, however, this induces complexity
-# for querying and indexing.
-DTYPE = "DECIMAL(10, 6)"
+import redis
 
 
-def _create_expressions_table(cursor):
-    """
-    Attempts to create the `Expressions` table, which is indexed by sampleId.
-    :param cursor:
-    :return cursor:
-    """
-    cursor.execute("CREATE TABLE Expressions (sampleId VARCHAR PRIMARY KEY)")
-    return cursor
-
-
-def _create_features_table(cursor):
-    """
-    Attempts to create the `Features` table. To enable dynamic typing add a
-    column for the DTYPE.
-    :param cursor:
-    :return cursor:
-    """
-    cursor.execute(
-        "CREATE TABLE Features "
-        "(featureId VARCHAR PRIMARY KEY, featureName VARCHAR)")
-    return cursor
-
-
-def _upsert_feature(cursor, featureId):
+def _upsert_feature(cursor, feature_id):
     """
     Attempts to upsert a row in Features table.
     :param cursor:
     :return:
     """
-    cursor.execute(
-        "UPSERT INTO Features(featureId) VALUES ('{}')".format(featureId))
+    return cursor.set("feature:{}".format(feature_id), True)
 
 
-def _feature_dtype_list(featureIds):
+def _multi_upsert(cursor, keys, values):
     """
-    Make a formatted string that includes the DTYPE for ease of writing
-    queries.
-    :param featureIds:
+    Takes a dictionary of key:value pairs and upserts them using a multiset.
+    :param cursor:
+    :param upsert_dict:
     :return:
     """
-    return ", ".join(map(
-        lambda x: "{} {}".format(x, DTYPE), featureIds))
+    upsert_dict = dict(zip(keys, values))
+    return cursor.mset(upsert_dict)
 
 
-def _upsert_sample(cursor, sampleId, featureIds, values):
+def _upsert_sample(cursor, sample_id, feature_ids, values):
     """
     Attempt to execute an upsert statement that includes the `values`.
 
     :param cursor:
-    :param sampleId:
-    :param featureIds:
+    :param sample_id:
+    :param feature_ids:
     :param values:
     :return:
     """
-    feature_dtype_list = _feature_dtype_list(featureIds)
-    sql = "UPSERT INTO Expressions(sampleId, {}) VALUES ('{}', {})".format(
-            feature_dtype_list,
-            sampleId,
-            ", ".join(map(lambda x: str(x), values)))
-    cursor.execute(sql)
+    keys = ["expression:{}:{}".format(sample_id, f) for f in feature_ids]
+    # add a sample key/value pair
+    keys.append("sample:{}".format(sample_id))
+    values.append(True)
+    return _multi_upsert(cursor, keys, values)
 
 
-def _upsert_features(cursor, featureIds):
+def _upsert_features(cursor, feature_ids):
     """
     Attempts to upsert a featureId row for every featureId.
     :param cursor:
@@ -83,8 +51,9 @@ def _upsert_features(cursor, featureIds):
     # Consider creating the transposed table here as well in Features
     # to easily find the samples associated with a given key. In this case
     # we simply upsert the key for every feature.
-    for featureId in featureIds:
-        _upsert_feature(cursor, featureId)
+    keys = ["feature:{}".format(f) for f in feature_ids]
+    values = [True for x in xrange(len(feature_ids))]
+    return _multi_upsert(cursor, keys, values)
 
 
 def upsert_sample(cursor, sampleId, featureIds, values, upsert_features=True):
@@ -128,39 +97,42 @@ def connect(url, **kwargs):
     :param url:
     :return:
     """
-    return phoenixdb.connect(url, autocommit=True, **kwargs)
+    return redis.StrictRedis(host=url, port=6379, db=0)
 
 
-def list_features(cursor, limit=200000, offset=0):
+def list_features(cursor):
     """
     A convenience function for accessing the list of featureIds from the
     Features table.
     :param cursor:
-    :param limit:   Integer value to limit the number of returned featureIds.
-    :param offset:  Integer value to offset into the list of features.
-                    (useful when the list of features is very long)
     :return:
     """
-    cursor.execute("SELECT * from Features "
-                   "LIMIT {} OFFSET {}".format(limit, offset))
-    return _fetchall_keys(cursor)
+    keybase = "feature:*"
+    return _pretty_keys(cursor.scan_iter(match=keybase), "feature:")
 
 
-def list_samples(cursor, limit=1000000, offset=0):
+def _pretty_keys(keys, remove):
+    """
+    Takes an iterator of singletons and removes the substring to return nice
+    identifiers.
+    :param keys:
+    :param remove:
+    :return:
+    """
+    return (x.replace(remove, '') for x in keys)
+
+
+def list_samples(cursor):
     """
     A convenience function for accessing the list of sampleIds from the
     Samples table.
     :param cursor:
-    :param limit:   Integer value to limit the number of returned sampleIds.
-    :param offset:  Integer value to offset into the list of sampleIds.
     :return:
     """
-    cursor.execute("SELECT sampleId from Expressions "
-                   "LIMIT {} OFFSET {}".format(limit, offset))
-    return _fetchall_keys(cursor)
+    return _pretty_keys(cursor.scan_iter(match="sample:*"), "sample:")
 
 
-def matrix(cursor, sampleIds, featureIds):
+def matrix(cursor, sample_ids, feature_ids):
     """
     A convenience function for gathering matrices of expression data from the
     expressions table.
@@ -171,26 +143,19 @@ def matrix(cursor, sampleIds, featureIds):
                         expression data.
     :return:
     """
-    cursor.execute(matrix_sql(sampleIds, featureIds))
-    return cursor.fetchall()
-
-
-def matrix_sql(sampleIds, featureIds):
-    """
-    A convenience function for generating the request for a sample-feature
-    matrix. It includes the sampleId, which simplifies labeling into a
-    dataframe. Also used internally by the `matrix` function.
-    :param sampleIds:
-    :param featureIds:
-    :return:
-    """
-    feature_dtype_list = _feature_dtype_list(featureIds)
-    feature_list = ", ".join(featureIds)
-    sample_list = ", ".join(map(lambda x: "'{}'".format(x), sampleIds))
-    sql = "SELECT sampleId, {} from Expressions({}) " \
-          "WHERE sampleId IN({})".format(
-            feature_list, feature_dtype_list, sample_list)
-    return sql
+    keys = []
+    ret_matrix = []
+    for sample_id in sample_ids:
+        for feature_id in feature_ids:
+            keys.append("expression:{}:{}".format(sample_id, feature_id))
+    values = [float(x) for x in cursor.mget(*keys)]
+    k = 0
+    for sample_id in sample_ids:
+        limit = len(feature_ids)
+        offset = k * len(feature_ids)
+        ret_matrix.append([sample_id] + values[offset:offset+limit])
+        k += 1
+    return ret_matrix
 
 
 def _fetchall_keys(cursor):
@@ -216,15 +181,3 @@ def _safe_fn(fn, *args):
     except Exception as e:
         print(e)
     return ret
-
-
-def initialize(connection):
-    """
-    Initializes the celldb tables using a phoenixdb connection.
-    :param connection:
-    :return:
-    """
-    cursor = connection.cursor()
-    _safe_fn(_create_expressions_table, cursor)
-    _safe_fn(_create_features_table, cursor)
-    return cursor
