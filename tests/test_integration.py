@@ -102,6 +102,15 @@ class TestUpsertSamples:
         assert set(celldb.list_samples(cursor)) == set(sample_ids)
         assert set(celldb.list_features(cursor)) == set(feature_ids)
 
+    def test_upsert_tuple(self):
+        """
+        Checks to make sure that the client accepts both tuples and lists.
+        :return:
+        """
+        connection = celldb.connect(URL)
+        celldb.upsert_samples(
+            connection, ('sample_tuple',), ('feature_tuple',), ((0.1,),))
+
 
 class TestUpsertTimes:
     """
