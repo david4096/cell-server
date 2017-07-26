@@ -132,7 +132,37 @@ def list_samples(cursor):
     return _pretty_keys(cursor.scan_iter(match="sample:*"), "sample:")
 
 
-def matrix(cursor, sample_ids, feature_ids):
+def _string_to_float(string_list):
+    """
+    Converts a list of string values to float values.
+    :param string_list:
+    :return:
+    """
+    return map(float, string_list)
+
+
+def _safe_float_vector(iterable):
+    """
+    Takes an iterable and returns a vector of floats. Respects the null
+    return value.
+    :param iterable:
+    :return:
+    """
+    return [float(x) if x else None for x in iterable]
+
+
+def _get_safe_float_vector(connection, keys):
+    """
+    Attempts to get a float vector from the database using a connection and
+    list of keys.
+    :param connection:
+    :param keys:
+    :return:
+    """
+    return _safe_float_vector(connection.mget(*keys))
+
+
+def matrix(connection, sample_ids, feature_ids):
     """
     A convenience function for gathering matrices of expression data from the
     expressions table.
@@ -148,7 +178,7 @@ def matrix(cursor, sample_ids, feature_ids):
     for sample_id in sample_ids:
         for feature_id in feature_ids:
             keys.append("expression:{}:{}".format(sample_id, feature_id))
-    values = [float(x) for x in cursor.mget(*keys)]
+    values = _get_safe_float_vector(connection, keys)
     k = 0
     for sample_id in sample_ids:
         limit = len(feature_ids)

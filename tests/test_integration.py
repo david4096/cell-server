@@ -204,3 +204,39 @@ class TestMatrix:
             for i, value in enumerate(row[1:]):
                 assert value == vectors[k][i]
         assert len(matrix) == len(sampleIds)
+        _drop_tables(cursor)
+
+    def test_singleton_matrix(self):
+        """
+        Tests to make sure a single sample doesn't throw an exception and
+        returns the expected results.
+        :return:
+        """
+        connection = celldb.connect(URL)
+        sampleIds, featureIds, vectors = _random_dataset(1, 4)
+        celldb.upsert_samples(connection, sampleIds, featureIds, vectors)
+        sample_ids = celldb.list_samples(connection)
+        assert list(sample_ids)[0] == sampleIds[0]
+        feature_ids = celldb.list_features(connection)
+        assert len(featureIds) == len(list(feature_ids))
+        matrix = celldb.matrix(connection, sampleIds, featureIds)
+        for k, row in enumerate(matrix):
+            assert row[0] == sampleIds[k]
+            # The row has the sample_id in the first position
+            assert len(row) == len(featureIds) + 1
+            for i, value in enumerate(row[1:]):
+                assert value == vectors[k][i]
+        _drop_tables(connection)
+
+    def test_single_feature_matrix(self):
+        """
+        Tests to make sure that making a single feature is upserted as
+        expected and that retrieving the resulting matrix doesn't error.
+        :return:
+        """
+        connection = celldb.connect(URL)
+        sampleIds, featureIds, vectors = _random_dataset(1, 4)
+        celldb.upsert_samples(connection, sampleIds, featureIds, vectors)
+        feature_ids = celldb.list_features(connection)
+        assert set(feature_ids) == set(featureIds)
+        _drop_tables(connection)
