@@ -36,9 +36,12 @@ def _upsert_sample(cursor, sample_id, feature_ids, values):
     """
     keys = ["expression:{}:{}".format(sample_id, f) for f in feature_ids]
     # add a sample key/value pair
-    keys.append("sample:{}".format(sample_id))
-    values.append(True)
-    return _multi_upsert(cursor, keys, values)
+    sample_key = "sample:{}".format(sample_id)
+    key_list = list(keys)
+    value_list = list(values)
+    key_list.append(sample_key)
+    value_list.append(True)
+    return _multi_upsert(cursor, key_list, value_list)
 
 
 def _upsert_features(cursor, feature_ids):
