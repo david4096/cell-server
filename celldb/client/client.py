@@ -10,7 +10,7 @@ def _upsert_feature(cursor, feature_id):
     :param cursor:
     :return:
     """
-    return cursor.set("feature:{}".format(feature_id), True)
+    return cursor.sadd("features", feature_id)
 
 
 def _multi_upsert(cursor, keys, values):
@@ -36,12 +36,8 @@ def _upsert_sample(cursor, sample_id, feature_ids, values):
     """
     keys = ["expression:{}:{}".format(sample_id, f) for f in feature_ids]
     # add a sample key/value pair
-    sample_key = "sample:{}".format(sample_id)
-    key_list = list(keys)
-    value_list = list(values)
-    key_list.append(sample_key)
-    value_list.append(True)
-    return _multi_upsert(cursor, key_list, value_list)
+    cursor.sadd("samples", sample_id)
+    return _multi_upsert(cursor, keys, values)
 
 
 def _upsert_features(cursor, feature_ids):
@@ -54,9 +50,7 @@ def _upsert_features(cursor, feature_ids):
     # Consider creating the transposed table here as well in Features
     # to easily find the samples associated with a given key. In this case
     # we simply upsert the key for every feature.
-    keys = ["feature:{}".format(f) for f in feature_ids]
-    values = [True for x in xrange(len(feature_ids))]
-    return _multi_upsert(cursor, keys, values)
+    return cursor.sadd("features", *feature_ids)
 
 
 def upsert_sample(cursor, sampleId, featureIds, values, upsert_features=True):
@@ -110,9 +104,8 @@ def list_features(cursor):
     :param cursor:
     :return:
     """
-    keybase = "feature:*"
     return _pretty_keys(
-        cursor.scan_iter(count=5000, match=keybase), "feature:")
+        cursor.sscan_iter("features", count=50), "feature:")
 
 
 def _pretty_keys(keys, remove):
@@ -133,8 +126,9 @@ def list_samples(cursor):
     :param cursor:
     :return:
     """
+
     return _pretty_keys(
-        cursor.scan_iter(count=5000, match="sample:*"), "sample:")
+        cursor.sscan_iter("samples", count=50), "sample:")
 
 
 def _string_to_float(string_list):
