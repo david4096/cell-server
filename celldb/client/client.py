@@ -104,8 +104,10 @@ def list_features(cursor):
     :param cursor:
     :return:
     """
-    return _pretty_keys(
-        cursor.sscan_iter("features", count=50), "feature:")
+    # We set our count to be excessively high to optimize listing of all of
+    # the features at once. Providing this via the client might be nice.
+    # number of transcripts ~ 200k
+    return cursor.sscan_iter("features", count=200000)
 
 
 def _pretty_keys(keys, remove):
@@ -127,8 +129,7 @@ def list_samples(cursor):
     :return:
     """
 
-    return _pretty_keys(
-        cursor.sscan_iter("samples", count=50), "sample:")
+    return cursor.sscan_iter("samples", count=5000)
 
 
 def _string_to_float(string_list):
