@@ -137,7 +137,8 @@ def _safe_float_vector(iterable):
     :param iterable:
     :return:
     """
-    return [float(x) if x else None for x in iterable]
+    # FIXME workaround in client to deal with data ingestion problem
+    return [float(x) if x and x != 'NA' else None for x in iterable]
 
 
 def _get_safe_float_vector(connection, keys):
