@@ -110,17 +110,6 @@ def list_features(cursor):
     return cursor.sscan_iter("features", count=200000)
 
 
-def _pretty_keys(keys, remove):
-    """
-    Takes an iterator of singletons and removes the substring to return nice
-    identifiers.
-    :param keys:
-    :param remove:
-    :return:
-    """
-    return (x.replace(remove, '') for x in keys)
-
-
 def list_samples(cursor):
     """
     A convenience function for accessing the list of sampleIds from the
