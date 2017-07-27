@@ -108,7 +108,8 @@ def list_features(cursor):
     :return:
     """
     keybase = "feature:*"
-    return _pretty_keys(cursor.scan_iter(match=keybase), "feature:")
+    return _pretty_keys(
+        cursor.scan_iter(count=5000, match=keybase), "feature:")
 
 
 def _pretty_keys(keys, remove):
@@ -129,7 +130,8 @@ def list_samples(cursor):
     :param cursor:
     :return:
     """
-    return _pretty_keys(cursor.scan_iter(match="sample:*"), "sample:")
+    return _pretty_keys(
+        cursor.scan_iter(count=5000, match="sample:*"), "sample:")
 
 
 def _string_to_float(string_list):

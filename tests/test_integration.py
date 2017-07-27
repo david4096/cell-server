@@ -175,6 +175,29 @@ class TestUpsertTimes:
         end = time.time()
         assert (end - start) / float(n_samples) < per_sample
 
+    def test_list_many(self):
+        """
+        Makes sure both upsert and list happen in appropriate time
+        :return:
+        """
+        connection = celldb.connect(URL)
+        _drop_tables(connection)
+        list_time = 30
+        per_sample = 1
+        n_samples = 10000
+        n_features = 10
+        sample_ids, feature_ids, vectors = _random_dataset(
+            n_samples, n_features)
+        start = time.time()
+        celldb.upsert_samples(connection, sample_ids, feature_ids, vectors)
+        end = time.time()
+        assert (end - start) / float(n_samples) < per_sample
+        start = time.time()
+        sample_list = list(celldb.list_samples(connection))
+        end = time.time()
+        assert (end - start) < list_time
+        assert len(sample_list) == len(sample_ids)
+
 
 class TestMatrix:
     """
