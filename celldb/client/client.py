@@ -24,6 +24,19 @@ def _multi_upsert(cursor, keys, values):
     return cursor.mset(upsert_dict)
 
 
+def _multi_hash_upsert(cursor, key, keys, values):
+    """
+    Upserts a set of hash values at the given key by combining the keys
+    and values arguments into a dictionary and performing hmset.
+    :param cursor:
+    :param key:
+    :param keys:
+    :param values:
+    :return:
+    """
+    return cursor.hmset(key, dict(zip(keys, values)))
+
+
 def _upsert_sample(cursor, sample_id, feature_ids, values):
     """
     Attempt to execute an upsert statement that includes the `values`.
@@ -34,10 +47,9 @@ def _upsert_sample(cursor, sample_id, feature_ids, values):
     :param values:
     :return:
     """
-    keys = ["expression:{}:{}".format(sample_id, f) for f in feature_ids]
     # add a sample key/value pair
     cursor.sadd("samples", sample_id)
-    return _multi_upsert(cursor, keys, values)
+    return _multi_hash_upsert(cursor, sample_id, feature_ids, values)
 
 
 def _upsert_features(cursor, feature_ids):
@@ -163,18 +175,10 @@ def matrix(connection, sample_ids, feature_ids):
                         expression data.
     :return:
     """
-    keys = []
     ret_matrix = []
     for sample_id in sample_ids:
-        for feature_id in feature_ids:
-            keys.append("expression:{}:{}".format(sample_id, feature_id))
-    values = _get_safe_float_vector(connection, keys)
-    k = 0
-    for sample_id in sample_ids:
-        limit = len(feature_ids)
-        offset = k * len(feature_ids)
-        ret_matrix.append([sample_id] + values[offset:offset+limit])
-        k += 1
+        vector = _safe_float_vector(connection.hmget(sample_id, feature_ids))
+        ret_matrix.append([sample_id] + vector)
     return ret_matrix
 
 
