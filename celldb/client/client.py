@@ -49,7 +49,10 @@ def _upsert_sample(cursor, sample_id, feature_ids, values):
     """
     # add a sample key/value pair
     cursor.sadd("samples", sample_id)
-    return _multi_hash_upsert(cursor, sample_id, feature_ids, values)
+    # We just don't upsert zeros!
+    filtered_f, filtered_v = zip(*filter(
+        lambda (x, y): y > 0, zip(feature_ids, values)))
+    return _multi_hash_upsert(cursor, sample_id, filtered_f, filtered_v)
 
 
 def _upsert_features(cursor, feature_ids):
@@ -191,6 +194,15 @@ def matrix(connection, sample_ids, feature_ids):
     return map(
         lambda x: _build_matrix_row(connection, x, feature_ids), sample_ids)
 
+
+def _sparse_matrix(connection, sample_ids, feature_ids):
+    """
+    Creates a sparse representation that can be rebuilt into a csr matrix by
+    :param connection:
+    :param sample_ids:
+    :param feature_ids:
+    :return:
+    """
 
 def _safe_fn(fn, *args):
     """
