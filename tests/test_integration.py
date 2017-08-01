@@ -272,3 +272,24 @@ class TestMatrix:
         feature_ids = celldb.list_features(connection)
         assert set(feature_ids) == set(featureIds)
         _drop_tables(connection)
+
+    def test_large_matrix(self):
+        """
+        Tests to make sure that when request a large matrix we get satisfactory
+        results.
+
+        :return:
+        """
+        connection = celldb.connect(URL)
+        #  The amount of time in seconds per point we're willing to accept
+        per_point = 0.01
+        n_samples = 10000
+        n_features = 40
+        points = float(n_samples * n_features)
+        sampleIds, featureIds, vectors = _random_dataset(10000, 40)
+        celldb.upsert_samples(connection, sampleIds, featureIds, vectors)
+        start = time.time()
+        matrix = celldb.matrix(connection, sampleIds, featureIds)
+        assert len(matrix) == len(sampleIds)
+        end = time.time()
+        assert (end - start) / points < per_point

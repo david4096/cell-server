@@ -95,9 +95,9 @@ def upsert_samples(cursor, sampleIds, featureIds, vectors):
     :return:
     """
     _upsert_features(cursor, featureIds)
-    for k, sampleId in enumerate(sampleIds):
-        _upsert_sample(cursor, sampleId, featureIds, vectors[k])
-    return cursor
+    return map(
+            lambda (k, x): _upsert_sample(cursor, x, featureIds, vectors[k]),
+            enumerate(sampleIds))
 
 
 def connect(url, **kwargs):
@@ -164,6 +164,19 @@ def _get_safe_float_vector(connection, keys):
     return _safe_float_vector(connection.mget(*keys))
 
 
+def _build_matrix_row(connection, sample_id, feature_ids):
+    """
+    Takes a sample_id to build a row of the matrix.
+
+    :param connection:
+    :param sample_id:
+    :param feature_ids:
+    :return:
+    """
+    vector = _safe_float_vector(connection.hmget(sample_id, feature_ids))
+    return [sample_id] + vector
+
+
 def matrix(connection, sample_ids, feature_ids):
     """
     A convenience function for gathering matrices of expression data from the
@@ -175,21 +188,8 @@ def matrix(connection, sample_ids, feature_ids):
                         expression data.
     :return:
     """
-    ret_matrix = []
-    for sample_id in sample_ids:
-        vector = _safe_float_vector(connection.hmget(sample_id, feature_ids))
-        ret_matrix.append([sample_id] + vector)
-    return ret_matrix
-
-
-def _fetchall_keys(cursor):
-    """
-    A private convenience function that gets the first item from every row
-    of a fetch. This is useful for gathering keys of samples and features.
-    :param cursor:
-    :return: One dimensional list of first value gathered from a cursor.
-    """
-    return [x[0] for x in cursor.fetchall()]
+    return map(
+        lambda x: _build_matrix_row(connection, x, feature_ids), sample_ids)
 
 
 def _safe_fn(fn, *args):
