@@ -195,14 +195,55 @@ def matrix(connection, sample_ids, feature_ids):
         lambda x: _build_matrix_row(connection, x, feature_ids), sample_ids)
 
 
-def _sparse_matrix(connection, sample_ids, feature_ids):
+def _sparse_dict(connection, sample_ids, feature_ids):
     """
     Creates a sparse representation that can be rebuilt into a csr matrix by
+    a client.
     :param connection:
     :param sample_ids:
     :param feature_ids:
     :return:
     """
+    dense = matrix(connection, sample_ids, feature_ids)
+    ret_dict = {}
+    # iterate sample-wise
+    for i, row in enumerate(dense):
+        # The first value in the list is the sample_id, ignore it
+        for k, val in enumerate(row[1:]):
+            if val > 0:
+                if ret_dict.get(str(i), None) is None:
+                    ret_dict[str(i)] = {}
+                ret_dict[str(i)][str(k)] = val
+    return ret_dict
+
+# And back again
+# for k, sample_id in enumerate(resp['sample_ids']):
+#      ...:     dense.append([])
+#      ...:     row = [0 for x in range(len(resp['feature_ids']))]
+#      ...:     print(sample_id)
+#      ...:     samplevalues = resp['values'].get(str(resp['sample_ids'].index(sample_id)), None)
+#      ...:     print(samplevalues)
+#      ...:     if samplevalues is not None:
+#      ...:         for key in samplevalues:
+#      ...:             print resp['feature_ids'][int(key)], samplevalues[key]
+#      ...:             row[int(key)] = samplevalues[key]
+#      ...:     dense[k] = [sample_id] + row
+
+
+def sparse_dict(connection, sample_ids, feature_ids):
+    """
+    Returns a sparse dictionary with the first level being the index of the
+    sample and the second level being the index of the feature.
+    :param connection:
+    :param sample_ids:
+    :param feature_ids:
+    :return:
+    """
+    values = _sparse_dict(connection, sample_ids, feature_ids)
+    return {
+        "sample_ids": sample_ids,
+        "feature_ids": feature_ids,
+        "values": values}
 
 def _safe_fn(fn, *args):
     """
