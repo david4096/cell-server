@@ -5,7 +5,7 @@ from client import (
     list_samples,
     matrix,
     upsert_samples,
-    sparse_dict)
+    sparse_matrix)
 
 assert connect
 assert upsert_sample
@@ -13,4 +13,4 @@ assert list_features
 assert list_samples
 assert matrix
 assert upsert_samples
-assert sparse_dict
+assert sparse_matrix

@@ -153,6 +153,8 @@ def _safe_float_vector(iterable):
     :return:
     """
     # FIXME workaround in client to deal with data ingestion problem
+    # The RNA seqer API puts NA in for values that haven't been quantified.
+    # We send back None instead of a string.
     return [float(x) if x and x != 'NA' else None for x in iterable]
 
 
@@ -195,42 +197,34 @@ def matrix(connection, sample_ids, feature_ids):
         lambda x: _build_matrix_row(connection, x, feature_ids), sample_ids)
 
 
-def _sparse_dict(connection, sample_ids, feature_ids):
+def _sparse_matrix(connection, sample_ids, feature_ids):
     """
     Creates a sparse representation that can be rebuilt into a csr matrix by
     a client.
     :param connection:
     :param sample_ids:
     :param feature_ids:
-    :return:
+    :return: A sparse dictionary with a key for each sample-feature triplet.
     """
+    # Since the values are stored as k-v pairs, we need to first gather the
+    # dense representation.
     dense = matrix(connection, sample_ids, feature_ids)
     ret_dict = {}
-    # iterate sample-wise
+    # Iterate sample-wise through the dense matrix.
     for i, row in enumerate(dense):
-        # The first value in the list is the sample_id, ignore it
+        # The first value in the list is the sample_id, ignore it.
         for k, val in enumerate(row[1:]):
+            # This is where we ignore values at 0.
             if val > 0:
+                # Initialize a key for the sample_id.
                 if ret_dict.get(str(i), None) is None:
                     ret_dict[str(i)] = {}
+                # Finally set the i-th sample's k-th feature to the value.
                 ret_dict[str(i)][str(k)] = val
     return ret_dict
 
-# And back again
-# for k, sample_id in enumerate(resp['sample_ids']):
-#      ...:     dense.append([])
-#      ...:     row = [0 for x in range(len(resp['feature_ids']))]
-#      ...:     print(sample_id)
-#      ...:     samplevalues = resp['values'].get(str(resp['sample_ids'].index(sample_id)), None)
-#      ...:     print(samplevalues)
-#      ...:     if samplevalues is not None:
-#      ...:         for key in samplevalues:
-#      ...:             print resp['feature_ids'][int(key)], samplevalues[key]
-#      ...:             row[int(key)] = samplevalues[key]
-#      ...:     dense[k] = [sample_id] + row
 
-
-def sparse_dict(connection, sample_ids, feature_ids):
+def sparse_matrix(connection, sample_ids, feature_ids):
     """
     Returns a sparse dictionary with the first level being the index of the
     sample and the second level being the index of the feature.
@@ -239,11 +233,12 @@ def sparse_dict(connection, sample_ids, feature_ids):
     :param feature_ids:
     :return:
     """
-    values = _sparse_dict(connection, sample_ids, feature_ids)
+    values = _sparse_matrix(connection, sample_ids, feature_ids)
     return {
         "sample_ids": sample_ids,
         "feature_ids": feature_ids,
         "values": values}
+
 
 def _safe_fn(fn, *args):
     """

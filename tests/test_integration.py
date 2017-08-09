@@ -293,3 +293,35 @@ class TestMatrix:
         assert len(matrix) == len(sampleIds)
         end = time.time()
         assert (end - start) / points < per_point
+
+
+class TestSparseMatrix:
+    """
+    These tests attempt an upsert and then demonstrate the functionality
+    of the "sparse_matrix" query function.
+    :return:
+    """
+    @classmethod
+    def setup_class(cls):
+        connection = celldb.connect(URL)
+        cursor = connection
+        _drop_tables(cursor)
+
+    @classmethod
+    def teardown_class(cls):
+        cursor = celldb.connect(URL)
+        _drop_tables(cursor)
+
+    def test_sparse_matrix(self):
+        cursor = celldb.connect(URL)
+        sample_ids, feature_ids, vectors = _random_dataset(4, 4)
+        celldb.upsert_samples(cursor, sample_ids, feature_ids, vectors)
+        matrix = celldb.sparse_matrix(cursor, sample_ids, feature_ids)
+        # The sparse matrix has the list of samples and features at the top
+        # level for convenience. These become indices into the `values` map.
+        assert len(matrix['sample_ids']) == len(sample_ids)
+        assert len(matrix['feature_ids']) == len(feature_ids)
+
+        for k, v in enumerate(matrix['values']):
+            assert vectors[int(k)][int(v)] == vectors[int(k)][int(v)]
+        _drop_tables(cursor)
