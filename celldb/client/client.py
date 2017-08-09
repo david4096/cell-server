@@ -49,7 +49,10 @@ def _upsert_sample(cursor, sample_id, feature_ids, values):
     """
     # add a sample key/value pair
     cursor.sadd("samples", sample_id)
-    return _multi_hash_upsert(cursor, sample_id, feature_ids, values)
+    # We just don't upsert zeros!
+    filtered_f, filtered_v = zip(*filter(
+        lambda (x, y): y > 0, zip(feature_ids, values)))
+    return _multi_hash_upsert(cursor, sample_id, filtered_f, filtered_v)
 
 
 def _upsert_features(cursor, feature_ids):
@@ -150,6 +153,8 @@ def _safe_float_vector(iterable):
     :return:
     """
     # FIXME workaround in client to deal with data ingestion problem
+    # The RNA seqer API puts NA in for values that haven't been quantified.
+    # We send back None instead of a string.
     return [float(x) if x and x != 'NA' else None for x in iterable]
 
 
@@ -190,6 +195,49 @@ def matrix(connection, sample_ids, feature_ids):
     """
     return map(
         lambda x: _build_matrix_row(connection, x, feature_ids), sample_ids)
+
+
+def _sparse_matrix(connection, sample_ids, feature_ids):
+    """
+    Creates a sparse representation that can be rebuilt into a csr matrix by
+    a client.
+    :param connection:
+    :param sample_ids:
+    :param feature_ids:
+    :return: A sparse dictionary with a key for each sample-feature triplet.
+    """
+    # Since the values are stored as k-v pairs, we need to first gather the
+    # dense representation.
+    dense = matrix(connection, sample_ids, feature_ids)
+    ret_dict = {}
+    # Iterate sample-wise through the dense matrix.
+    for i, row in enumerate(dense):
+        # The first value in the list is the sample_id, ignore it.
+        for k, val in enumerate(row[1:]):
+            # This is where we ignore values at 0.
+            if val > 0:
+                # Initialize a key for the sample_id.
+                if ret_dict.get(str(i), None) is None:
+                    ret_dict[str(i)] = {}
+                # Finally set the i-th sample's k-th feature to the value.
+                ret_dict[str(i)][str(k)] = val
+    return ret_dict
+
+
+def sparse_matrix(connection, sample_ids, feature_ids):
+    """
+    Returns a sparse dictionary with the first level being the index of the
+    sample and the second level being the index of the feature.
+    :param connection:
+    :param sample_ids:
+    :param feature_ids:
+    :return:
+    """
+    values = _sparse_matrix(connection, sample_ids, feature_ids)
+    return {
+        "sample_ids": sample_ids,
+        "feature_ids": feature_ids,
+        "values": values}
 
 
 def _safe_fn(fn, *args):
