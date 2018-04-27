@@ -2,6 +2,31 @@
 # celldb
 #
 import redis
+import hashlib
+
+def _upsert_feature_set(cursor, feature_set_id, feature_ids):
+    if feature_set_id is None or feature_set_id == "":
+        md5 = hashlib.md5()
+        sorted_features_ids = sorted(feature_ids)
+        md5.update("".join(sorted_features_ids))
+        feature_set_id = md5.hexdigest()
+    cursor.sadd('feature_sets', feature_set_id)
+    cursor.sadd(feature_set_id, *feature_ids)
+    return cursor
+
+def _upsert_cohort(cursor, cohort_id, sample_ids):
+    """
+    Attempts to upsert a value in the cohorts list.
+
+    A cohort itself is simply a key to a list of sample
+    identifiers.
+    :param cursor:
+    :param cohort_id:
+    :param sample_ids:
+    :return:
+    """
+    cursor.sadd('cohorts', cohort_id)
+    return cursor.sadd(cohort_id, *sample_ids)
 
 
 def _upsert_feature(cursor, feature_id):
@@ -50,9 +75,9 @@ def _upsert_sample(cursor, sample_id, feature_ids, values):
     # add a sample key/value pair
     cursor.sadd("samples", sample_id)
     # We just don't upsert zeros!
-    filtered_f, filtered_v = zip(*filter(
-        lambda (x, y): y > 0, zip(feature_ids, values)))
-    return _multi_hash_upsert(cursor, sample_id, filtered_f, filtered_v)
+    # filtered_f, filtered_v = zip(*filter(
+    #     lambda (x, y): y != 0, zip(feature_ids, values)))
+    return _multi_hash_upsert(cursor, sample_id, feature_ids, values)
 
 
 def _upsert_features(cursor, feature_ids):
@@ -67,6 +92,21 @@ def _upsert_features(cursor, feature_ids):
     # we simply upsert the key for every feature.
     return cursor.sadd("features", *feature_ids)
 
+
+def upsert_feature_set(cursor, feature_set_id, features):
+    return _upsert_feature_set(cursor, feature_set_id, features)
+
+
+def upsert_cohort(cursor, cohort_id, sample_ids):
+    """
+    Attempts to upsert a cohort as a list of sample identifiers existing
+    cohorts will be appended to.
+
+    :param cursor:
+    :param cohort_id:
+    :return:
+    """
+    return _upsert_cohort(cursor, cohort_id, sample_ids)
 
 def upsert_sample(cursor, sampleId, featureIds, values, upsert_features=True):
     """
@@ -110,6 +150,58 @@ def connect(url, **kwargs):
     :return:
     """
     return redis.StrictRedis(host=url, port=6379, db=0)
+
+
+def list_feature_sets(cursor):
+    """
+    A convenience function for accessing the list of featureIds from the
+    Feature sets table.
+    :param cursor:
+    :return:
+    """
+    # We set our count to be excessively high to optimize listing of all of
+    # the features at once. Providing this via the client might be nice.
+    # number of transcripts ~ 200k
+    return cursor.sscan_iter("feature_sets", count=200000)
+
+
+def list_cohorts(cursor):
+    """
+    A convenience function for accessing the list of featureIds from the
+    Features table.
+    :param cursor:
+    :return:
+    """
+    # We set our count to be excessively high to optimize listing of all of
+    # the features at once. Providing this via the client might be nice.
+    # number of transcripts ~ 200k
+    return cursor.sscan_iter("cohorts", count=200000)
+
+
+def get_feature_set(cursor, feature_set_id):
+    """
+    Returns a list of feature set ids for a given feature set.
+
+    :param cursor:
+    :return:
+    """
+    # We set our count to be excessively high to optimize listing of all of
+    # the features at once. Providing this via the client might be nice.
+    # number of transcripts ~ 200k
+    return cursor.sscan_iter(feature_set_id, count=200000)
+
+
+def get_cohort(cursor, cohort_id):
+    """
+    Returns a list of sample ids for a given cohort.
+
+    :param cursor:
+    :return:
+    """
+    # We set our count to be excessively high to optimize listing of all of
+    # the features at once. Providing this via the client might be nice.
+    # number of transcripts ~ 200k
+    return cursor.sscan_iter(cohort_id, count=200000)
 
 
 def list_features(cursor):
